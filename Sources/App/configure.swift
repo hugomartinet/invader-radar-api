@@ -1,5 +1,6 @@
 import Fluent
 import FluentPostgresDriver
+import JWT
 import NIOSSL
 import Vapor
 
@@ -19,7 +20,14 @@ public func configure(_ app: Application) async throws {
         tls: .prefer(try .init(configuration: .clientDefault)))
     ), as: .psql)
 
-  app.migrations.add(CreateTodo())
+  app.migrations.add(CreateInvader())
+  app.migrations.add(CreateUser())
+
+  // Configure JWT
+  guard let secretKey = Environment.get("SECRET_KEY") else {
+    throw Abort(.internalServerError, reason: "SECRET_KEY environment variable not found")
+  }
+  app.jwt.signers.use(.hs256(key: secretKey))
 
   // register routes
   try routes(app)
