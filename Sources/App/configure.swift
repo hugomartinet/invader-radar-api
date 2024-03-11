@@ -22,6 +22,7 @@ public func configure(_ app: Application) async throws {
 
   app.migrations.add(CreateInvader())
   app.migrations.add(CreateUser())
+  app.migrations.add(CreateUserInvaderPivot())
 
   // Configure JWT
   guard let secretKey = Environment.get("SECRET_KEY") else {
