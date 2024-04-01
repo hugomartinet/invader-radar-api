@@ -10,7 +10,7 @@ struct UserController: RouteCollection {
 
   }
 
-  func signup(req: Request) async throws -> HTTPStatus {
+  func signup(req: Request) async throws -> String {
     let user = try req.content.decode(User.self)
     guard
       try await User.query(on: req.db)
@@ -19,9 +19,15 @@ struct UserController: RouteCollection {
     else {
       throw Abort(.badRequest, reason: "Username already exists")
     }
+
     user.password = try BCryptDigest().hash(user.password)
     try await user.save(on: req.db)
-    return .ok
+
+    let payload = AuthenticationPayload(
+      userID: try user.requireID(), username: user.username,
+      exp: ExpirationClaim(value: Date().addingTimeInterval(60 * 60)))
+    let token = try req.jwt.sign(payload)
+    return token
   }
 
   func login(req: Request) async throws -> String {
